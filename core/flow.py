@@ -1,5 +1,5 @@
 from scapy.all import *
-from .feature import FeatureStorage
+from feature import FeatureStorage
 import hashlib
 import pandas as pd
 
@@ -10,11 +10,11 @@ class Flow:
         self.feature_extractor = FeatureStorage()
         self.desc = desc
 
-    def filter(self, packet):
-        return self.compiled_filter(packet)
+    def filter(self, pkt):
+        return self.compiled_filter(pkt)
 
-    def add_new_packet(self, packet):
-        self.feature_extractor.extract_features(packet)
+    def add_new_packet(self, pkt):
+        self.feature_extractor.extract_features(pkt)
 
     def get_features(self):
         df = self.feature_extractor.get_features()
@@ -72,11 +72,11 @@ class FlowStorage:
             dst_port = pkt['UDP'].dport
 
         # Create one flow_key for src -> dst and dst -> src
-       	if int(pkt['IP'].src.split(".")[0]) > int(pkt['IP'].dst.split(".")[0]):
-        	return f"{src_ip}:{src_port}<-->{dst_ip}:{dst_port}"
+        if int(pkt['IP'].src.split(".")[0]) > int(pkt['IP'].dst.split(".")[0]):
+            return f"{src_ip}:{src_port}<-->{dst_ip}:{dst_port}"
         else:
-        	return f"{dst_ip}:{dst_port}<-->{src_ip}:{src_port}"
-
+            return f"{dst_ip}:{dst_port}<-->{src_ip}:{src_port}"
+        
     def get_flows_for_packet(self, pkt):
         flow_key = self._extract_packet_info(pkt)
         if flow_key not in self.storage.keys():
@@ -90,7 +90,7 @@ class FlowStorage:
             return False
 
         if flow_key not in self.storage.keys():
-        	self.storage[flow_key] = []
+            self.storage[flow_key] = []
 
         self.storage[flow_key].append(flow)
 
@@ -107,3 +107,6 @@ class FlowStorage:
 
         result_df = pd.concat(result_features_list, ignore_index=True, sort=False)
         return result_df
+    
+    def filter(self, pkt):
+        return (not pkt.haslayer("IP")) or ((not pkt.haslayer('TCP') and (not pkt.haslayer('UDP'))))
