@@ -1,7 +1,8 @@
-from scapy.all import *
-from .feature import FeatureStorage
 import hashlib
 import pandas as pd
+from scapy.all import *
+
+from .feature_storage import FeatureStorage
 
 
 class Flow:

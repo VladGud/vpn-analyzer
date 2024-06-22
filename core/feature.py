@@ -1,12 +1,16 @@
-from scapy.all import *
+import abc
 import statistics
 import pandas as pd
+import numpy as np
+from scapy.all import *
 
 
-class FeatureInterface:
+class FeatureInterface(abc.ABC):
+    @abc.abstractmethod
     def extract_feature(self, packet):
         pass
 
+    @abc.abstractmethod
     def get_feature(self):
         pass
 
@@ -21,7 +25,7 @@ class InterpacketIntervalFeature(FeatureInterface):
         self.packet_times = []
 
     def extract_feature(self, packet):
-        self.packet_times.append(packet.time)
+        self.packet_times.append(float(packet.time))
 
     def get_feature(self):
         interpacket_intervals = [b - a for a, b in zip(self.packet_times, self.packet_times[1:])]
@@ -29,14 +33,14 @@ class InterpacketIntervalFeature(FeatureInterface):
         data = {}
 
         if len(self.packet_times) < 2:
-            data[self.MAX_INTERPACKET_INTERVAL] = [None]
-            data[self.MIN_INTERPACKET_INTERVAL] = [None]
-            data[self.AVG_INTERPACKET_INTERVAL] = [None]
-            data[self.SUM_INTERPACKET_INTERVAL] = [None]
+            data[self.MAX_INTERPACKET_INTERVAL] = [np.nan]
+            data[self.MIN_INTERPACKET_INTERVAL] = [np.nan]
+            data[self.AVG_INTERPACKET_INTERVAL] = [np.nan]
+            data[self.SUM_INTERPACKET_INTERVAL] = [np.nan]
         else:
-            data[self.MAX_INTERPACKET_INTERVAL] = [max(interpacket_intervals)]
-            data[self.MIN_INTERPACKET_INTERVAL] = [min(interpacket_intervals)]
-            data[self.AVG_INTERPACKET_INTERVAL] = [statistics.mean(interpacket_intervals)]
+            data[self.MAX_INTERPACKET_INTERVAL] = [np.max(interpacket_intervals)]
+            data[self.MIN_INTERPACKET_INTERVAL] = [np.min(interpacket_intervals)]
+            data[self.AVG_INTERPACKET_INTERVAL] = [np.mean(interpacket_intervals)]
             data[self.SUM_INTERPACKET_INTERVAL] = [self.packet_times[-1] - self.packet_times[0]]
 
         return pd.DataFrame(data)
@@ -59,32 +63,16 @@ class PacketLengthFeature(FeatureInterface):
         data = {}
 
         if len(self.packet_lengths) < 1:
-            data[self.MAX_PACKET_LENGTH] = [None] # TODO: Add list?
-            data[self.MIN_PACKET_LENGTH] = [None]
-            data[self.AVG_PACKET_LENGTH] = [None]
-            data[self.SUM_PACKET_LENGTH] = [None]
-            data[self.MODE_PACKET_LENGTH] = [None]
+            data[self.MAX_PACKET_LENGTH] = [np.nan] # TODO: Add list?
+            data[self.MIN_PACKET_LENGTH] = [np.nan]
+            data[self.AVG_PACKET_LENGTH] = [np.nan]
+            data[self.SUM_PACKET_LENGTH] = [np.nan]
+            data[self.MODE_PACKET_LENGTH] = [np.nan]
         else:
-            data[self.MAX_PACKET_LENGTH] = [max(self.packet_lengths)]
-            data[self.MIN_PACKET_LENGTH] = [min(self.packet_lengths)]
-            data[self.AVG_PACKET_LENGTH] = [statistics.mean(self.packet_lengths)]
-            data[self.SUM_PACKET_LENGTH] = [sum(self.packet_lengths)]
+            data[self.MAX_PACKET_LENGTH] = [np.max(self.packet_lengths)]
+            data[self.MIN_PACKET_LENGTH] = [np.min(self.packet_lengths)]
+            data[self.AVG_PACKET_LENGTH] = [np.mean(self.packet_lengths)]
+            data[self.SUM_PACKET_LENGTH] = [np.sum(self.packet_lengths)]
             data[self.MODE_PACKET_LENGTH] = [statistics.mode(self.packet_lengths)]
 
         return pd.DataFrame(data)
-
-
-class FeatureStorage:
-    def __init__(self):
-        self.features = [InterpacketIntervalFeature(), PacketLengthFeature()]
-
-    def extract_features(self, packet):
-        for feature in self.features:
-            feature.extract_feature(packet)
-
-    def get_features(self):
-        feature_dfs = []
-        for feature in self.features:
-            feature_dfs.append(feature.get_feature())
-
-        return pd.concat(feature_dfs, axis=1)

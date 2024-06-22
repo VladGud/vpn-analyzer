@@ -1,5 +1,6 @@
 import unittest
 
+import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
 from scapy.all import PcapReader
@@ -10,14 +11,28 @@ from core.flow import FlowStorage, Flow, BloomFilter
 class TestFlowStorage(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.source_file = Path("vpn-pcap/big-normal-order-traffic.pcap")
+        cls.source_file = Path("vpn-pcap/xray-order.pcap")
         cls.flow_storage = FlowStorage()
         cls.pcap_file = PcapReader(str(cls.source_file))
 
     @classmethod
+    def create_label(cls, df):
+        normal_df = df[~df['Flow'].str.contains('81.200.154.28')].copy() 
+        normal_df['label'] = 'normal'
+        
+        vpn_df = df[df['Flow'].str.contains('81.200.154.28')].copy()
+        vpn_df['label'] = 'vpn'
+
+        df = pd.concat([normal_df, vpn_df], ignore_index=True)
+
+        return df
+
+    @classmethod
     def tearDownClass(cls):
+        cls.pcap_file.close()
+
         result_df = cls.flow_storage.get_features_for_all_flows()
-        result_df["label"] = "normal"
+        result_df = cls.create_label(result_df)
 
         print(result_df)
 
