@@ -2,21 +2,24 @@ import pickle
 from sklearn.decomposition import FastICA
 from sklearn.preprocessing import PowerTransformer
 
-class ModelPipeline:
-    def __init__(self, clf):
+class ModelPipeline():
+    def __init__(self, clf=None, n_components=8, ica=None, power_transformer=None):
         self.clf_model = clf
-        self.ica_model = FastICA(n_components=8, algorithm='deflation', fun='exp', whiten='unit-variance')
-        self.power_transformer = PowerTransformer()
+        self.ica_model = ica if ica else FastICA(n_components=n_components, algorithm='deflation', fun='exp', whiten='unit-variance')
+        self.power_transformer = power_transformer if power_transformer else PowerTransformer()
 
-    def load_models(self, power_transformer_model_path, ica_model_path, clf_model_path):
+    @staticmethod
+    def load_models(power_transformer_model_path, ica_model_path, clf_model_path):
         with open(clf_model_path, "rb") as f:
-            self.clf_model = pickle.load(f)
+            clf_model = pickle.load(f)
 
         with open(power_transformer_model_path, "rb") as f:
-            self.power_transformer = pickle.load(f)
+            power_transformer = pickle.load(f)
 
         with open(ica_model_path, "rb") as f:
-            self.ica_model = pickle.load(f)
+            ica_model = pickle.load(f)
+
+        return ModelPipeline(clf=clf_model, power_transformer=power_transformer, ica=ica_model)
 
     def save_models(self, power_transformer_model_path, ica_model_path, clf_model_path):
         with open(clf_model_path, "wb") as f:

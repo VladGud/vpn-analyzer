@@ -10,18 +10,22 @@ class Flow:
         self.compiled_filter = filter_lambda
         self.feature_extractor = FeatureStorage()
         self.desc = desc
+        self.packet_number = 0
 
     def filter(self, packet):
         return self.compiled_filter(packet)
 
     def add_new_packet(self, packet):
         self.feature_extractor.extract_features(packet)
+        self.packet_number += 1
 
     def get_features(self):
         df = self.feature_extractor.get_features()
         df.insert(0, "Description", self.desc)
         return df
 
+    def get_packet_number(self):
+        return self.packet_number
 
 def sha256_hash(data):
     return hashlib.sha256(data.encode())
@@ -58,10 +62,6 @@ class FlowStorage:
         self.storage = {}
 
     def _extract_packet_info(self, pkt):
-        flag = (not pkt.haslayer("IP")) or ((not pkt.haslayer('TCP') and (not pkt.haslayer('UDP'))))
-        if flag:
-            return None
-
         src_ip = pkt['IP'].src
         dst_ip = pkt['IP'].dst
 
@@ -77,6 +77,9 @@ class FlowStorage:
         	return f"{src_ip}:{src_port}<-->{dst_ip}:{dst_port}"
         else:
         	return f"{dst_ip}:{dst_port}<-->{src_ip}:{src_port}"
+
+    def filter(self, packet):
+        return (not packet.haslayer("IP")) or ((not packet.haslayer('TCP') and (not packet.haslayer('UDP'))))
 
     def get_flows_for_packet(self, pkt):
         flow_key = self._extract_packet_info(pkt)

@@ -1,7 +1,13 @@
 import pandas as pd
 
 from .feature import InterpacketIntervalFeature, PacketLengthFeature
-from .interval_feature import InterpacketIntervalFunctionPerTimeFeature, MeanFunction, SumFunction
+from .interval_feature import (
+    InterpacketIntervalFunctionPerTimeFeature,
+    PacketLengthFunctionPerTimeFeature,
+    PacketNumberPerTimeFeature,
+    MeanFunction,
+    SumFunction
+)
 
 class FeatureStorage:
     def __init__(self):
@@ -9,7 +15,10 @@ class FeatureStorage:
             InterpacketIntervalFeature(),
             PacketLengthFeature(),
             InterpacketIntervalFunctionPerTimeFeature(func=MeanFunction()),
-            InterpacketIntervalFunctionPerTimeFeature(func=SumFunction())
+            InterpacketIntervalFunctionPerTimeFeature(func=SumFunction()),
+            PacketLengthFunctionPerTimeFeature(func=MeanFunction()),
+            PacketLengthFunctionPerTimeFeature(func=SumFunction()),
+            PacketNumberPerTimeFeature(),
         ]
 
     def extract_features(self, packet):
