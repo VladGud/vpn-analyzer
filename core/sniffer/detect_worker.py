@@ -1,6 +1,6 @@
 import time
 import threading
-from .concurrent_queue import ConcurrentQueue
+from ..utils.concurrent_queue import ConcurrentQueue
 from ..flow import FlowStorage, Flow
 
 

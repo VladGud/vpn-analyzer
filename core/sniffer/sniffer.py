@@ -1,5 +1,5 @@
 from scapy.all import *
-from .concurrent_queue import ConcurrentQueue
+from ..utils.concurrent_queue import ConcurrentQueue
 
 class Sniffer:
     def __init__(self, consumer, threads_count=1):
