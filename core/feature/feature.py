@@ -14,6 +14,9 @@ class FeatureInterface(abc.ABC):
     def get_feature(self):
         pass
 
+    @abc.abstractmethod
+    def get_time_series_feature(self):
+        pass
 
 class InterpacketIntervalFeature(FeatureInterface):
     MAX_INTERPACKET_INTERVAL = "max_interpacket_interval"
@@ -27,8 +30,11 @@ class InterpacketIntervalFeature(FeatureInterface):
     def extract_feature(self, packet):
         self.packet_times.append(float(packet.time))
 
+    def get_interpacket_intervals(self):
+        return [b - a for a, b in zip(self.packet_times, self.packet_times[1:])]
+
     def get_feature(self):
-        interpacket_intervals = [b - a for a, b in zip(self.packet_times, self.packet_times[1:])]
+        interpacket_intervals = self.get_interpacket_intervals()
 
         data = {}
 
@@ -44,6 +50,9 @@ class InterpacketIntervalFeature(FeatureInterface):
             data[self.SUM_INTERPACKET_INTERVAL] = [self.packet_times[-1] - self.packet_times[0]]
 
         return pd.DataFrame(data)
+
+    def get_time_series_feature(self):
+        return pd.DataFrame(self.get_interpacket_intervals(), columns=['interpacket_interval']) 
 
 
 class PacketLengthFeature(FeatureInterface):
@@ -76,3 +85,6 @@ class PacketLengthFeature(FeatureInterface):
             data[self.MODE_PACKET_LENGTH] = [statistics.mode(self.packet_lengths)]
 
         return pd.DataFrame(data)
+
+    def get_time_series_feature(self):
+        return pd.DataFrame(self.packet_lengths, columns=['packet_length']) 

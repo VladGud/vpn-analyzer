@@ -1,6 +1,7 @@
 import pickle
 from sklearn.decomposition import FastICA
 from sklearn.preprocessing import PowerTransformer
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 class ModelPipeline():
     def __init__(self, clf=None, n_components=8, ica=None, power_transformer=None):

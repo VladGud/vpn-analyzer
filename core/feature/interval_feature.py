@@ -42,6 +42,7 @@ class InterpacketIntervalFunctionPerTimeFeature(FeatureInterface):
         self.MIN_FEATURE = f"min_feature_{func.name()}_interpacket_interval_per_{max_interpacket_interval_time}"
         self.STD_FEATURE = f"std_feature_{func.name()}_interpacket_interval_per_{max_interpacket_interval_time}"
         self.MEAN_FEATURE = f"mean_feature_{func.name()}_interpacket_interval_per_{max_interpacket_interval_time}"
+        self.TIME_SERIES_FEATURE_NAME = f"{func.name()}_interpacket_interval_per_{max_interpacket_interval_time}"
 
     def extract_feature(self, packet):
         new_packet_time = float(packet.time)
@@ -89,6 +90,9 @@ class InterpacketIntervalFunctionPerTimeFeature(FeatureInterface):
 
         return pd.DataFrame(data)
 
+    def get_time_series_feature(self):
+        return pd.DataFrame(self._create_result_feature_array(), columns=[self.TIME_SERIES_FEATURE_NAME]) 
+
 class PacketLengthFunctionPerTimeFeature(FeatureInterface):
     def __init__(self, func, max_interpacket_interval_time=0.2):
         self.current_interval_time = None
@@ -100,6 +104,7 @@ class PacketLengthFunctionPerTimeFeature(FeatureInterface):
         self.MIN_FEATURE = f"min_feature_{func.name()}_packet_length_per_{max_interpacket_interval_time}"
         self.STD_FEATURE = f"std_feature_{func.name()}_packet_length_per_{max_interpacket_interval_time}"
         self.MEAN_FEATURE = f"mean_feature_{func.name()}_packet_length_per_{max_interpacket_interval_time}"
+        self.TIME_SERIES_FEATURE_NAME = f"{func.name()}_packet_length_per_{max_interpacket_interval_time}"
 
     def extract_feature(self, packet):
         new_packet_time = float(packet.time)
@@ -147,6 +152,9 @@ class PacketLengthFunctionPerTimeFeature(FeatureInterface):
 
         return pd.DataFrame(data)
 
+    def get_time_series_feature(self):
+        return pd.DataFrame(self._create_result_feature_array(), columns=[self.TIME_SERIES_FEATURE_NAME])
+
 class PacketNumberPerTimeFeature(FeatureInterface):
     def __init__(self, max_interpacket_interval_time=0.2):
         self.current_interval_time = None
@@ -157,6 +165,7 @@ class PacketNumberPerTimeFeature(FeatureInterface):
         self.MIN_FEATURE = f"min_feature_packet_number_per_{max_interpacket_interval_time}"
         self.STD_FEATURE = f"std_feature_packet_number_per_{max_interpacket_interval_time}"
         self.MEAN_FEATURE = f"mean_feature_packet_number_per_{max_interpacket_interval_time}"
+        self.TIME_SERIES_FEATURE_NAME = f"packet_number_per_{max_interpacket_interval_time}"
 
     def extract_feature(self, packet):
         new_packet_time = float(packet.time)
@@ -173,8 +182,11 @@ class PacketNumberPerTimeFeature(FeatureInterface):
             self.current_interval_time = new_packet_time
             self.packet_number_per_time[new_packet_time] = 1
 
+    def _create_result_feature_array(self):
+        return list(self.packet_number_per_time.values())
+
     def get_feature(self):
-        result_feature_array = list(self.packet_number_per_time.values())
+        result_feature_array = self._create_result_feature_array()
 
         data = {}
         if result_feature_array:
@@ -189,3 +201,6 @@ class PacketNumberPerTimeFeature(FeatureInterface):
             data[self.MEAN_FEATURE] = [np.nan]
 
         return pd.DataFrame(data)
+
+    def get_time_series_feature(self):
+        return pd.DataFrame(self._create_result_feature_array(), columns=[self.TIME_SERIES_FEATURE_NAME]) 

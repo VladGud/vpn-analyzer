@@ -2,10 +2,9 @@ from ..feature.feature_storage import FeatureStorage
 
 
 class Flow:
-    def __init__(self, filter_lambda=lambda pkt: True, desc="All packet"):
+    def __init__(self, filter_lambda=lambda pkt: True):
         self.compiled_filter = filter_lambda
         self.feature_extractor = FeatureStorage()
-        self.desc = desc
         self.packet_number = 0
 
     def filter(self, packet):
@@ -17,7 +16,10 @@ class Flow:
 
     def get_features(self):
         df = self.feature_extractor.get_features()
-        df.insert(0, "Description", self.desc)
+        return df
+
+    def get_time_series_features(self):
+        df = self.feature_extractor.get_time_series_features()
         return df
 
     def get_packet_number(self):

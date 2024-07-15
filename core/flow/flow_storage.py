@@ -4,10 +4,10 @@ from scapy.all import *
 from ..utils.fsbst import FixSizeBST
 
 class FlowStorage:
-    def __init__(self, fix_size=10):
+    def __init__(self, fix_size=10000):
         self._storage = FixSizeBST(fix_size)
 
-    def _extract_packet_info(self, pkt):
+    def extract_flow_key_for_packet(self, pkt):
         src_ip = pkt['IP'].src
         dst_ip = pkt['IP'].dst
 
@@ -25,29 +25,53 @@ class FlowStorage:
             return f"{dst_ip}:{dst_port}<-->{src_ip}:{src_port}"
 
     def filter(self, packet):
-        return (not packet.haslayer("IP")) or ((not packet.haslayer('TCP') and (not packet.haslayer('UDP'))))
+        if (not packet.haslayer("IP")) or ((not packet.haslayer('TCP') and (not packet.haslayer('UDP')))):
+            return True
+
+        if packet.haslayer('TCP'):
+            src_port = packet['TCP'].sport
+            dst_port = packet['TCP'].dport
+        elif packet.haslayer('UDP'):
+            src_port = packet['UDP'].sport
+            dst_port = packet['UDP'].dport 
+
+        # Work only with TLS
+        if src_port != 443 and dst_port != 443:
+            return True
+
+        return False
 
     def get_flows_for_packet(self, pkt):
-        flow_key = self._extract_packet_info(pkt)
+        flow_key = self.extract_flow_key_for_packet(pkt)
         return self._storage.get_value(flow_key)
 
     def add_new_flow(self, flow, pkt):
-        flow_key = self._extract_packet_info(pkt)
+        flow_key = self.extract_flow_key_for_packet(pkt)
 
         if not self._storage.get_value(flow_key):
             self._storage.add_new_node(flow_key, [])
 
         self._storage.get_value(flow_key).append(flow)
 
+    def _remove_from_flows(self, flow_key, flow):
+        flows = self._storage.get_value(flow_key)
+        if not flows:
+            print("Warning: Flow cannot be deleted because FlowStorage did not contain flows for packet")
+            return
+        flows.remove(flow)
 
-    def get_features_for_all_flows(self):
-        result_features_list = []
+    def _clear_flow_key(self, flow_key):
+        if self._storage.get_value(flow_key) is not None and not self._storage.get_value(flow_key):
+            self._storage.delete(flow_key)
 
-        for flow_key, flows in self._storage.items():
-            for flow in flows:
-                df = flow.get_features()
-                df.insert(0, "Flow", flow_key)
-                result_features_list.append(df)
 
-        result_df = pd.concat(result_features_list, ignore_index=True, sort=False)
-        return result_df
+    def remove_flow_for_packet(self, flow, pkt):
+        flow_key = self.extract_flow_key_for_packet(pkt)
+        self._remove_from_flows(flow_key, flow)
+        self._clear_flow_key(flow_key)
+
+    def get_total_size(self):
+        return len(self._storage.items())
+
+    def items(self):
+        return self._storage.items()

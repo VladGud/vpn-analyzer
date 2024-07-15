@@ -3,10 +3,11 @@ from splay import SplayTree
 
 class TestCase(unittest.TestCase):
     def setUp(self):
+        self.value = 1
         self.keys = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         self.t = SplayTree()
         for key in self.keys:
-            self.t.insert(key)
+            self.t.insert(key, self.value)
         
     def testInsert(self):
         for key in self.keys:
@@ -23,7 +24,7 @@ class TestCase(unittest.TestCase):
         gap = 307
         i = gap
         while i != 0:
-            t.insert(i)
+            t.insert(i, self.value)
             i = (i + gap) % nums
 
     def testIsEmpty(self):
@@ -34,6 +35,9 @@ class TestCase(unittest.TestCase):
     def testMinMax(self):
         self.assertEquals(self.t.findMin(), 0)
         self.assertEquals(self.t.findMax(), 9)
+
+    def testLevelOrder(self):
+        self.assertEquals(self.keys, [node.key for node in self.t.levelorder()][::-1])
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,6 +1,9 @@
+from queue import Queue
+
 class Node:
-    def __init__(self, key):
+    def __init__(self, key=None, value=None):
         self.key = key
+        self.value = value
         self.left = self.right = None
 
     def equals(self, node):
@@ -9,11 +12,12 @@ class Node:
 class SplayTree:
     def __init__(self):
         self.root = None
-        self.header = Node(None) #For splay()
+        self.header = Node() #For splay()
 
-    def insert(self, key):
+    def insert(self, key, value):
+        n = Node(key, value)
         if (self.root == None):
-            self.root = Node(key)
+            self.root = n
             return
 
         self.splay(key)
@@ -21,7 +25,6 @@ class SplayTree:
             # If the key is already there in the tree, don't do anything.
             return
 
-        n = Node(key)
         if key < self.root.key:
             n.left = self.root.left
             n.right = self.root
@@ -53,7 +56,7 @@ class SplayTree:
         while x.left != None:
             x = x.left
         self.splay(x.key)
-        return x.key
+        return x
 
     def findMax(self):
         if self.root == None:
@@ -62,7 +65,7 @@ class SplayTree:
         while (x.right != None):
             x = x.right
         self.splay(x.key)
-        return x.key
+        return x
 
     def find(self, key):
         if self.root == None:
@@ -70,11 +73,32 @@ class SplayTree:
         self.splay(key)
         if self.root.key != key:
             return None
-        return self.root.key
+        return self.root
 
     def isEmpty(self):
         return self.root == None
     
+    def levelorder(self):
+        if self.root==None:
+            return
+        Q=Queue()
+        Q.put(self.root)
+        lst = []
+        while(not Q.empty()):
+            node=Q.get()
+            if node==None:
+                continue
+            lst.append(node)
+            Q.put(node.left)
+            Q.put(node.right)
+        return lst
+
+    def size(self):
+        nodes = self.levelorder()
+        if not nodes:
+            return 0
+        return len(nodes)
+
     def splay(self, key):
         l = r = self.header
         t = self.root
