@@ -31,6 +31,7 @@ class InterpacketIntervalFeature(FeatureInterface):
         self.packet_times.append(float(packet.time))
 
     def get_interpacket_intervals(self):
+        self.packet_times = sorted(self.packet_times)
         return [b - a for a, b in zip(self.packet_times, self.packet_times[1:])]
 
     def get_feature(self):

@@ -30,6 +30,7 @@ class DetectWorker(threading.Thread):
 
         self.detect_threshold = detect_threshold
         self.possible_vpn_flow = defaultdict(int)
+        self.possible_non_vpn_flow = defaultdict(int)
 
     def run(self):
         while True:
@@ -42,15 +43,24 @@ class DetectWorker(threading.Thread):
     def set_input(self, input_queue):
         self.input_queue = input_queue
 
-    def update_possible_vpn_flow(self, packet):
-        flow_key = ''.join(sorted(f"{packet['IP'].src} -- {packet['IP'].dst}"))
+    def _extract_flow_key(self, packet):
+        return ''.join(sorted(f"{packet['IP'].src} -- {packet['IP'].dst}"))
+
+    def print_statistic(self, flow, packet):
+        print()
+        print(f"Last found vpn flow: {self.flow_storage.extract_flow_key_for_packet(packet)}.")
+        print(f"Time spent on detecting the latest VPN flow: {packet.time- flow.get_time()}")
+        print(f"The total number of VPN flow to this node: {self.possible_vpn_flow[self._extract_flow_key(packet)]}")
+        # print(f"The total number of Non-VPN flow to this node: {self.possible_non_vpn_flow[self._extract_flow_key(packet)]}")
+        print(f"Total length of flow: {flow.get_total_length()}")
+        print(f"The current number of flow being processed: {self.flow_storage.get_total_size()}")
+        print()
+
+    def _update_possible_vpn_flow(self, flow, packet):
+        flow_key = self._extract_flow_key(packet)
         self.possible_vpn_flow[flow_key] += 1
         if self.possible_vpn_flow[flow_key] >= self.detect_threshold:
-            print()
-            print(f"Found vpn flow: {self.flow_storage.extract_flow_key_for_packet(packet)}.")
-            print(f"The current number of flow being processed: {self.flow_storage.get_total_size()}")
-            print(f"The total number of VPN connections to this node: {self.possible_vpn_flow[flow_key]}")
-            print()
+            self.print_statistic(flow, packet)
 
     def _flow_detect(self, flow, packet):
         flow_packet_number = flow.get_packet_number()
@@ -64,13 +74,10 @@ class DetectWorker(threading.Thread):
         if feature.isnull().any().any():
             return
 
-        feature = feature.drop([
-                'Description',
-            ], axis=1)
-
         if self.model_pipeline.predict(feature) == 'vpn':
-            self.update_possible_vpn_flow(packet)
-            self.flow_storage.remove_flow_for_packet(flow, packet)
+            self._update_possible_vpn_flow(flow, packet)
+        else:
+            self.possible_non_vpn_flow[self._extract_flow_key(packet)] += 1
 
     def _add_new_flow(self, packet):
         flow = Flow()
