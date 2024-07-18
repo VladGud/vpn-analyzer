@@ -3,6 +3,9 @@ from sklearn.decomposition import FastICA
 from sklearn.preprocessing import PowerTransformer
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
+# TODO: Create normal pipeline
+# TODO: Add discarding of unnecessary features inside this class
+# TODO: Add a model download from the config
 class ModelPipeline():
     def __init__(self, clf=None, n_components=8, ica=None, power_transformer=None):
         self.clf_model = clf
@@ -11,25 +14,25 @@ class ModelPipeline():
 
     @staticmethod
     def load_models(power_transformer_model_path, ica_model_path, clf_model_path):
-        with open(clf_model_path, "rb") as f:
+        with open(str(clf_model_path), "rb") as f:
             clf_model = pickle.load(f)
 
-        with open(power_transformer_model_path, "rb") as f:
+        with open(str(power_transformer_model_path), "rb") as f:
             power_transformer = pickle.load(f)
 
-        with open(ica_model_path, "rb") as f:
+        with open(str(ica_model_path), "rb") as f:
             ica_model = pickle.load(f)
 
         return ModelPipeline(clf=clf_model, power_transformer=power_transformer, ica=ica_model)
 
     def save_models(self, power_transformer_model_path, ica_model_path, clf_model_path):
-        with open(clf_model_path, "wb") as f:
+        with open(str(clf_model_path), "wb") as f:
             pickle.dump(self.clf_model, f)
 
-        with open(power_transformer_model_path, "wb") as f:
+        with open(str(power_transformer_model_path), "wb") as f:
             pickle.dump(self.power_transformer, f)
 
-        with open(ica_model_path, "wb") as f:
+        with open(str(ica_model_path), "wb") as f:
             pickle.dump(self.ica_model, f)
 
     def fit(self, X, y=None):

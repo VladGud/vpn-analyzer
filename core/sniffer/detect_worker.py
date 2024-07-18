@@ -51,7 +51,6 @@ class DetectWorker(threading.Thread):
         print(f"Last found vpn flow: {self.flow_storage.extract_flow_key_for_packet(packet)}.")
         print(f"Time spent on detecting the latest VPN flow: {packet.time- flow.get_time()}")
         print(f"The total number of VPN flow to this node: {self.possible_vpn_flow[self._extract_flow_key(packet)]}")
-        # print(f"The total number of Non-VPN flow to this node: {self.possible_non_vpn_flow[self._extract_flow_key(packet)]}")
         print(f"Total length of flow: {flow.get_total_length()}")
         print(f"The current number of flow being processed: {self.flow_storage.get_total_size()}")
         print()
