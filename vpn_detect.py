@@ -31,6 +31,13 @@ def make_argparser():
         default=30,
         help="After flow has processed a given number of packets, delete it from the processing queue."
     )
+    parser.add_argument(
+        "-f",
+        "--flow_storage_size",
+        type=int,
+        default=100,
+        help="Set the maximum allowed number of threads to be processed. If exceeded, the oldest flow will be destroyed"
+    )
 
     return parser
 
@@ -39,9 +46,14 @@ if __name__ == "__main__":
     model_pipeline = ModelPipeline.load_models(
         args.models_path.joinpath('power_transformer.pkl'),
         args.models_path.joinpath('ica.pkl'),
-   		args.models_path.joinpath('clf.pkl')
+        args.models_path.joinpath('clf.pkl')
     )
-    consumer = DetectWorker(model_pipeline, start_packet_number_threshold=args.start_threshold, end_packet_number_threshold=args.end_threshold)
+    consumer = DetectWorker(
+        model_pipeline,
+        start_packet_number_threshold=args.start_threshold,
+        end_packet_number_threshold=args.end_threshold,
+        flow_storage_size=args.flow_storage_size
+    )
     sniffer = Sniffer(consumer)
     thread_sniff = threading.Thread(target=sniffer.run, args=())
     thread_sniff.start()

@@ -14,6 +14,7 @@ class DetectWorker(threading.Thread):
             end_packet_number_threshold=60,
             predict_rate=5,
             detect_threshold=3,
+            flow_storage_size=1000,
             input_queue=None
     ):
         threading.Thread.__init__(self)
@@ -21,7 +22,7 @@ class DetectWorker(threading.Thread):
 
         self.input_queue = input_queue
 
-        self.flow_storage = FlowStorage()        
+        self.flow_storage = FlowStorage(fix_size=flow_storage_size)
         self.model_pipeline = model_pipeline
 
         self.predict_rate = predict_rate
