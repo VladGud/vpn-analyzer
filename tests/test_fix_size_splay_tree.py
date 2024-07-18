@@ -41,7 +41,3 @@ class TestFlowStorage(unittest.TestCase):
         print(oldest_items)
         print(self.t.items())
         self.assertTrue(oldest_items in self.t.items()[-8:])
-
-
-if __name__ == '__main__':
-    unittest.main()
