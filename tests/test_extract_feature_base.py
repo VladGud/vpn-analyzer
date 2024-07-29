@@ -17,7 +17,7 @@ from core.flow.flow_storage import FlowStorage
 class TestExtractFeatureFromFlowBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.source_file = Path("vpn-pcap/outline-vpn.pcap")
+        cls.source_file = Path("vpn-pcap/v2rayng-order-vless-reality.pcap")
         cls.flow_storage = FlowStorage()
         cls.pcap_file = PcapReader(str(cls.source_file))
         cls.max_packet_number_on_flow = 30

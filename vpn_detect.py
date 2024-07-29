@@ -44,9 +44,9 @@ def make_argparser():
 if __name__ == "__main__":
     args = make_argparser().parse_args()
     model_pipeline = ModelPipeline.load_models(
-        args.models_path.joinpath('power_transformer.pkl'),
-        args.models_path.joinpath('ica.pkl'),
-        args.models_path.joinpath('clf.pkl')
+        'models/selected-feature-0_96/power_transformer.pkl',
+        'models/selected-feature-0_96/ica.pkl',
+        'models/selected-feature-0_96/clf.pkl'
     )
     consumer = DetectWorker(
         model_pipeline,

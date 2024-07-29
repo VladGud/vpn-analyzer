@@ -1,3 +1,4 @@
+import time
 import pickle
 from sklearn.decomposition import FastICA
 from sklearn.preprocessing import PowerTransformer
@@ -11,6 +12,8 @@ class ModelPipeline():
         self.clf_model = clf
         self.ica_model = ica if ica else FastICA(n_components=n_components, algorithm='deflation', fun='exp', whiten='unit-variance')
         self.power_transformer = power_transformer if power_transformer else PowerTransformer()
+        self.time_spent = 0
+        self.predict_counter = 0
 
     @staticmethod
     def load_models(power_transformer_model_path, ica_model_path, clf_model_path):
@@ -47,7 +50,25 @@ class ModelPipeline():
         else:
             self.clf_model.fit(X_ica)
 
+    def time_count_decorator(func):
+        def wrapper(self, *args, **kwargs):
+            if self.predict_counter > 300:
+                self.time_spent = 0
+                self.predict_counter = 0
+            
+            start_time = time.time()
+            ret = func(self, *args, **kwargs)
+            self.time_spent += time.time() - start_time
+            self.predict_counter += 1
+            return ret
+        return wrapper
+
+    def get_average_time_spent(self):
+        return self.time_spent / self.predict_counter
+
+    @time_count_decorator
     def predict(self, X):
-        scaled_X = self.power_transformer.transform(X)
+        useful_X = X[self.power_transformer.feature_names_in_]
+        scaled_X = self.power_transformer.transform(useful_X)
         X_ica = self.ica_model.transform(scaled_X)
         return self.clf_model.predict(X_ica)

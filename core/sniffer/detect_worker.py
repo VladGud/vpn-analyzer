@@ -1,6 +1,10 @@
 import time
 import threading
 from collections import defaultdict
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 from ..utils.concurrent_queue import ConcurrentQueue
 from ..flow.flow import Flow
 from ..flow.flow_storage import FlowStorage
@@ -13,7 +17,7 @@ class DetectWorker(threading.Thread):
             start_packet_number_threshold=40,
             end_packet_number_threshold=60,
             predict_rate=5,
-            detect_threshold=3,
+            detect_threshold=10,
             flow_storage_size=1000,
             input_queue=None
     ):
@@ -33,6 +37,9 @@ class DetectWorker(threading.Thread):
         self.possible_vpn_flow = defaultdict(int)
         self.possible_non_vpn_flow = defaultdict(int)
 
+        self.extract_time = []
+        self.model_pipeline_time = []
+
     def run(self):
         while True:
             if not self.input_queue.empty():
@@ -47,24 +54,39 @@ class DetectWorker(threading.Thread):
     def _extract_flow_key(self, packet):
         return ''.join(sorted(f"{packet['IP'].src} -- {packet['IP'].dst}"))
 
-    def print_statistic(self, flow, packet):
+    def _show_time_relate(self, flow):
+        self.extract_time.append(flow.get_time_spent())
+        self.model_pipeline_time.append(self.model_pipeline.get_average_time_spent())
+        if len(self.extract_time) > 200:
+            sns.histplot(self.extract_time, kde=True)
+            plt.title("Distribution of feature extraction operation time")
+            plt.show()
+
+            sns.histplot(self.model_pipeline_time, kde=True)
+            plt.title("Distribution of model pipeline predict operation time")
+            plt.show()
+
+    def _print_statistic(self, flow, packet):
         print()
         print(f"Last found vpn flow: {self.flow_storage.extract_flow_key_for_packet(packet)}.")
-        print(f"Time spent on detecting the latest VPN flow: {packet.time- flow.get_time()}")
+        print(f"The time elapsed since the beginning of the flow creation: {packet.time- flow.get_create_timestamp()}")
+        print(f"Time spent on feature extraction: {flow.get_time_spent()}")
+        print(f"Average time spent on model pipeline predict: {self.model_pipeline.get_average_time_spent()}")
         print(f"The total number of VPN flow to this node: {self.possible_vpn_flow[self._extract_flow_key(packet)]}")
+        print(f"The total number of Non-VPN flow to this node: {self.possible_non_vpn_flow[self._extract_flow_key(packet)]}")
         print(f"Total length of flow: {flow.get_total_length()}")
         print(f"The current number of flow being processed: {self.flow_storage.get_total_size()}")
         print()
+        # self._show_time_relate(flow)
 
     def _update_possible_vpn_flow(self, flow, packet):
         flow_key = self._extract_flow_key(packet)
-        self.possible_vpn_flow[flow_key] += 1
-        if self.possible_vpn_flow[flow_key] >= self.detect_threshold:
-            self.print_statistic(flow, packet)
+        if self.possible_vpn_flow[flow_key] - self.possible_non_vpn_flow[flow_key] >= self.detect_threshold:
+            self._print_statistic(flow, packet)
 
     def _flow_detect(self, flow, packet):
         flow_packet_number = flow.get_packet_number()
-        if (flow_packet_number % self.predict_rate != 0) or (flow_packet_number < self.start_threshold_packet_number):
+        if (flow_packet_number % self.predict_rate != 0) or (flow_packet_number <= self.start_threshold_packet_number):
             return
 
         if flow_packet_number > self.end_packet_number_threshold:
@@ -75,6 +97,7 @@ class DetectWorker(threading.Thread):
             return
 
         if self.model_pipeline.predict(feature) == 'vpn':
+            self.possible_vpn_flow[self._extract_flow_key(packet)] += 1
             self._update_possible_vpn_flow(flow, packet)
         else:
             self.possible_non_vpn_flow[self._extract_flow_key(packet)] += 1
