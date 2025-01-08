@@ -11,6 +11,7 @@ wheel = "*"
 scikit-learn = "1.4.2"
 scapy = "*"
 pandas = "*"
+seaborn = "*"
 
 [dev-packages]
 flake8 = "*"

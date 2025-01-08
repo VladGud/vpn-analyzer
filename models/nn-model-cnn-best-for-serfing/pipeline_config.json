@@ -1,0 +1,7 @@
+{
+    "steps": {
+        "scaler": "scaler.pkl",
+        "classifier": "classifier.pkl"
+    },
+    "model_filter": "model_filter.pkl"
+}

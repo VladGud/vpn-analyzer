@@ -1,0 +1,6 @@
+{
+    "steps": {
+        "scaler": "scaler.pkl",
+        "classifier": "classifier.pkl"
+    }
+}

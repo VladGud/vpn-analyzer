@@ -17,7 +17,7 @@ from core.flow.flow_storage import FlowStorage
 class TestExtractFeatureFromFlowBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.source_file = Path("vpn-pcap/v2rayng-order-vless-reality.pcap")
+        cls.source_file = Path("normal-traffic-mac-v2.pcap")
         cls.flow_storage = FlowStorage()
         cls.pcap_file = PcapReader(str(cls.source_file))
         cls.max_packet_number_on_flow = 30
@@ -29,10 +29,10 @@ class TestExtractFeatureFromFlowBase(unittest.TestCase):
 
     @classmethod
     def create_label(cls, df):
-        normal_df = df[~df['Flow'].str.contains('81.200.154.28')].copy() 
+        normal_df = df[~df['Flow'].str.contains('147.45.49.23')].copy() 
         normal_df['label'] = 'normal'
         
-        vpn_df = df[df['Flow'].str.contains('81.200.154.28')].copy()
+        vpn_df = df[df['Flow'].str.contains('147.45.49.23')].copy()
         vpn_df['label'] = 'vpn'
 
         df = pd.concat([normal_df, vpn_df], ignore_index=True)

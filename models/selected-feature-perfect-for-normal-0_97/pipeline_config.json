@@ -1,0 +1,7 @@
+{
+    "steps": {
+        "scaler": "power_transformer.pkl",
+        "ica": "ica.pkl",
+        "classifier": "clf.pkl"
+    }
+}
