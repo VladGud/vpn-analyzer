@@ -82,7 +82,7 @@ class ModelPipeline:
             pipeline_structure[name] = step_path_str
 
         config_js = {'steps': pipeline_structure}
-        if self.model_filter is None:
+        if self.model_filter is not None:
             model_filter_path_str = "model_filter.pkl"
             model_filter_path = base_path.joinpath(model_filter_path_str)
             with open(model_filter_path, 'wb') as f:

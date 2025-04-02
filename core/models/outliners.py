@@ -17,7 +17,6 @@ class OutlierDetector:
     def __init__(self, group_column, feature_columns, z_score_threshold=3):
         """
         Инициализация детектора выбросов.
-
         Parameters:
         - group_column (str): Колонка для группировки данных.
         - feature_columns (list): Список фичей для проверки на выбросы.

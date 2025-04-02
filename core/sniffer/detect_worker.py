@@ -96,7 +96,7 @@ class DetectWorker(threading.Thread):
         if len(self.detection_time_vpn_flows[flow_key]) < self.flow_number_for_detect:
             return False
 
-        if self.possible_vpn_flow[flow_key] / self.possible_non_vpn_flow[flow_key] < self.vpn_to_novpn_ratio:
+        if (not self.possible_non_vpn_flow[flow_key]) or (self.possible_vpn_flow[flow_key] / self.possible_non_vpn_flow[flow_key] < self.vpn_to_novpn_ratio):
             return False
 
         return True

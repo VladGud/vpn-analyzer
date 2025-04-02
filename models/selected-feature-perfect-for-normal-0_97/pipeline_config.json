@@ -3,5 +3,6 @@
         "scaler": "power_transformer.pkl",
         "ica": "ica.pkl",
         "classifier": "clf.pkl"
-    }
+    },
+    "model_filter": "model_filter.pkl"
 }
